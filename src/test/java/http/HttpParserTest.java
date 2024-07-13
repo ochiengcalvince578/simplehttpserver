@@ -1,6 +1,7 @@
 package http;
 
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,7 +29,7 @@ class HttpParserTest {
         httpParser = new HttpParser();
     }
 
-    @org.junit.jupiter.api.Test
+    @Test
     void parseHttpRequest() {
 
         HttpRequest request = null;
@@ -45,7 +46,7 @@ class HttpParserTest {
 
     }
 
-    @org.junit.jupiter.api.Test
+    @Test
     void parseHttpRequestBadMethodName1()  {
 
         try {
@@ -57,18 +58,54 @@ class HttpParserTest {
         }
     }
 
-    @org.junit.jupiter.api.Test
+    @Test
     void parseHttpRequestBadMethodName2() {
 
         HttpRequest request = null;
         try {
             request = httpParser.parseHttpRequest(generateBadGetTestCase2());
-            LOGGER.debug("request method added : {}", request.getMethod());
+            //LOGGER.debug("request method added : {}", request.getMethod());
             fail();
         } catch (HttpParsingException e) {
             assertEquals(e.getErrorCode(), HttpStatusCode.SERVER_ERROR_501_NOT_IMPLEMENTED);
         }
 
+    }
+
+    @Test
+    void parseHttpRequestInvNumItems1() {
+        try {
+            HttpRequest request = httpParser.parseHttpRequest(
+                    generateBadTestCaseRequestLineInvNumItems()
+            );
+            fail();
+        } catch (HttpParsingException e) {
+            assertEquals(e.getErrorCode(), HttpStatusCode.CLIENT_ERROR_400_BAD_REQUEST);
+        }
+    }
+
+    @Test
+    void parseHttpRequestEmptyRequestLine() {
+        try {
+            HttpRequest request = httpParser.parseHttpRequest(
+                    generateBadTestCaseEmptyRequestLine()
+            );
+            fail();
+        } catch (HttpParsingException e) {
+            assertEquals(e.getErrorCode(), HttpStatusCode.CLIENT_ERROR_400_BAD_REQUEST);
+        }
+    }
+
+    @Test
+    void parseHttpRequestOnlyCRnoLF() {
+        try {
+            HttpRequest request = httpParser.parseHttpRequest(
+                    generateBadTestCaseRequestLineOnlyCRnoLF()
+            );
+            fail();
+        } catch (HttpParsingException e) {
+            assertEquals(e.getErrorCode(), HttpStatusCode.CLIENT_ERROR_400_BAD_REQUEST);
+        }
     }
 
     private InputStream generateValidGetTestCase () {
@@ -116,6 +153,51 @@ class HttpParserTest {
     private InputStream generateBadGetTestCase2 () {
 
         String rawData = "GETTTTTT / HTTP/1.1\r\n" +
+                "Host: localhost:8082\r\n" +
+                "Sec-Fetch-Dest: document\r\n" +
+                "Accept-Encoding: gzip, deflate, br, zstd\r\n" +
+                "Accept-Language: en-GB,en-US;q=0.9,en;q=0.8,sw;q=0.7\r\n" +
+                "\r\n";
+
+        InputStream inputStream = new ByteArrayInputStream(
+                rawData.getBytes(StandardCharsets.US_ASCII)
+        );
+        return  inputStream;
+    }
+
+    private InputStream generateBadTestCaseRequestLineInvNumItems () {
+
+        String rawData = "GET / AAAAA HTTP/1.1\r\n" +
+                "Host: localhost:8082\r\n" +
+                "Sec-Fetch-Dest: document\r\n" +
+                "Accept-Encoding: gzip, deflate, br, zstd\r\n" +
+                "Accept-Language: en-GB,en-US;q=0.9,en;q=0.8,sw;q=0.7\r\n" +
+                "\r\n";
+
+        InputStream inputStream = new ByteArrayInputStream(
+                rawData.getBytes(StandardCharsets.US_ASCII)
+        );
+        return  inputStream;
+    }
+
+    private InputStream generateBadTestCaseEmptyRequestLine () {
+
+        String rawData = "\r\n" +
+                "Host: localhost:8082\r\n" +
+                "Sec-Fetch-Dest: document\r\n" +
+                "Accept-Encoding: gzip, deflate, br, zstd\r\n" +
+                "Accept-Language: en-GB,en-US;q=0.9,en;q=0.8,sw;q=0.7\r\n" +
+                "\r\n";
+
+        InputStream inputStream = new ByteArrayInputStream(
+                rawData.getBytes(StandardCharsets.US_ASCII)
+        );
+        return  inputStream;
+    }
+
+    private InputStream generateBadTestCaseRequestLineOnlyCRnoLF () {
+
+        String rawData = "\r\n" +
                 "Host: localhost:8082\r\n" +
                 "Sec-Fetch-Dest: document\r\n" +
                 "Accept-Encoding: gzip, deflate, br, zstd\r\n" +
