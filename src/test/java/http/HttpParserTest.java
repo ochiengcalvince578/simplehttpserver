@@ -44,6 +44,8 @@ class HttpParserTest {
         assertNotNull(request);
         assertEquals(request.getMethod(), HttpMethod.GET);
         assertEquals(request.getRequestTarget(), "/");
+        assertEquals(request.getOriginalHttpVersion(), "HTTP/1.1");
+        assertEquals(request.getBestCompatibleHttpVersion(), HttpVersion.HTTP_1_1);
 
     }
 
@@ -108,6 +110,46 @@ class HttpParserTest {
             assertEquals(e.getErrorCode(), HttpStatusCode.CLIENT_ERROR_400_BAD_REQUEST);
         }
     }
+
+    @Test
+    void parseHttpRequestBadHttpVersion() {
+        try {
+            HttpRequest request = httpParser.parseHttpRequest(
+                    generateBadHttpVersion()
+            );
+            fail();
+        } catch (HttpParsingException e) {
+            assertEquals(e.getErrorCode(), HttpStatusCode.CLIENT_ERROR_400_BAD_REQUEST);
+        }
+    }
+
+    @Test
+    void parseHttpRequestUnsupportedHttpVersion() {
+        try {
+            HttpRequest request = httpParser.parseHttpRequest(
+                    generateUnsupportedHttpVersion()
+            );
+            fail();
+        } catch (HttpParsingException e) {
+            assertEquals(e.getErrorCode(), HttpStatusCode.SERVER_ERROR_505_HTTP_VERSION_NOT_SUPPORTED);
+        }
+    }
+
+
+    @Test
+    void parseHttpRequestSupportedHttpVersion() {
+        try {
+            HttpRequest request = httpParser.parseHttpRequest(
+                    generateSupportedHttpVersion()
+            );
+            assertNotNull(request);
+            assertEquals(request.getBestCompatibleHttpVersion(), HttpVersion.HTTP_1_1);
+            assertEquals(request.getOriginalHttpVersion(), "HTTP/1.2");
+        } catch (HttpParsingException e) {
+            fail();
+        }
+    }
+
 
     private InputStream generateValidGetTestCase () {
 
@@ -199,6 +241,51 @@ class HttpParserTest {
     private InputStream generateBadTestCaseRequestLineOnlyCRnoLF () {
 
         String rawData = "GET / HTTP/1.1\r" + // <----- no LF
+                "Host: localhost:8082\r\n" +
+                "Sec-Fetch-Dest: document\r\n" +
+                "Accept-Encoding: gzip, deflate, br, zstd\r\n" +
+                "Accept-Language: en-GB,en-US;q=0.9,en;q=0.8,sw;q=0.7\r\n" +
+                "\r\n";
+
+        InputStream inputStream = new ByteArrayInputStream(
+                rawData.getBytes(StandardCharsets.US_ASCII)
+        );
+        return  inputStream;
+    }
+
+    private InputStream generateBadHttpVersion () {
+
+        String rawData = "GET / HTTP1.1\r" +
+                "Host: localhost:8082\r\n" +
+                "Sec-Fetch-Dest: document\r\n" +
+                "Accept-Encoding: gzip, deflate, br, zstd\r\n" +
+                "Accept-Language: en-GB,en-US;q=0.9,en;q=0.8,sw;q=0.7\r\n" +
+                "\r\n";
+
+        InputStream inputStream = new ByteArrayInputStream(
+                rawData.getBytes(StandardCharsets.US_ASCII)
+        );
+        return  inputStream;
+    }
+
+    private InputStream generateUnsupportedHttpVersion () {
+
+        String rawData = "GET / HTTP/2.1\r\n" +
+                "Host: localhost:8082\r\n" +
+                "Sec-Fetch-Dest: document\r\n" +
+                "Accept-Encoding: gzip, deflate, br, zstd\r\n" +
+                "Accept-Language: en-GB,en-US;q=0.9,en;q=0.8,sw;q=0.7\r\n" +
+                "\r\n";
+
+        InputStream inputStream = new ByteArrayInputStream(
+                rawData.getBytes(StandardCharsets.US_ASCII)
+        );
+        return  inputStream;
+    }
+
+    private InputStream generateSupportedHttpVersion () {
+
+        String rawData = "GET / HTTP/1.2\r\n" +
                 "Host: localhost:8082\r\n" +
                 "Sec-Fetch-Dest: document\r\n" +
                 "Accept-Encoding: gzip, deflate, br, zstd\r\n" +
