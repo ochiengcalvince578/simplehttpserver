@@ -3,7 +3,7 @@ package http;
 public class HttpRequest extends HttpMessage {
 
   private HttpMethod method;
-  private HttpMethod requestTarget;
+  private String requestTarget;
 
   private HttpMethod httpVersion;
 
@@ -27,5 +27,19 @@ public class HttpRequest extends HttpMessage {
       }
 
           throw new HttpParsingException(HttpStatusCode.SERVER_ERROR_501_NOT_IMPLEMENTED);
+    }
+
+    public void setRequestTarget(String requestTarget) throws HttpParsingException {
+
+        if (requestTarget == null || requestTarget.length() == 0) {
+            throw new HttpParsingException(HttpStatusCode.SERVER_ERROR_500_INTERNAL_SERVER_ERROR);
+        }
+
+        this.requestTarget = requestTarget;
+    }
+
+    public String getRequestTarget() {
+
+        return requestTarget;
     }
 }

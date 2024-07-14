@@ -28,7 +28,7 @@ public class HttpParser {
      try {
          parseRequestLine(reader, request);
      }
-     catch (IOException | HttpParsingException e) {
+     catch (IOException e) {
          e.printStackTrace();
      }
 
@@ -71,6 +71,10 @@ public class HttpParser {
 
                   return;
               }
+
+              else {
+                  throw new HttpParsingException(HttpStatusCode.CLIENT_ERROR_400_BAD_REQUEST);
+              }
           }
 
           if (_byte == SP) {
@@ -85,6 +89,7 @@ public class HttpParser {
               else if (!requestTargetParsed) {
 
                   LOGGER.debug("Request line REQ TARGET to process : {}", processingDataBuffer.toString());
+                  request.setRequestTarget(processingDataBuffer.toString());
                   requestTargetParsed = true;
               }
 

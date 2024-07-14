@@ -11,8 +11,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.*;
 
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -42,7 +41,9 @@ class HttpParserTest {
             fail(e);
         }
 
-        //assertEquals(request.getMethod(), HttpMethod.GET);
+        assertNotNull(request);
+        assertEquals(request.getMethod(), HttpMethod.GET);
+        assertEquals(request.getRequestTarget(), "/");
 
     }
 
@@ -197,7 +198,7 @@ class HttpParserTest {
 
     private InputStream generateBadTestCaseRequestLineOnlyCRnoLF () {
 
-        String rawData = "\r\n" +
+        String rawData = "GET / HTTP/1.1\r" + // <----- no LF
                 "Host: localhost:8082\r\n" +
                 "Sec-Fetch-Dest: document\r\n" +
                 "Accept-Encoding: gzip, deflate, br, zstd\r\n" +
