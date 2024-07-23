@@ -1,2 +1,8 @@
-.idea*
-.idea/jarRepositories.xml
+
+.idea/
+target/
+out/
+.mvn/
+logs/
+*.iml
+**/secrets.yaml
